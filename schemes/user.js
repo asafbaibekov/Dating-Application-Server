@@ -20,6 +20,14 @@ var userSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
+    access_token: {
+      type: String,
+      default: ''
+    },
+    refresh_token: {
+      type: String,
+      default: ''
+    },
     mobile: {
         type: String,
         required: true,
