@@ -48,7 +48,12 @@ router.post('/register', async function(req, res, next) {
             gender: { enum: [ gender ] }
         }).save()
             .then(doc => { res.send({ code: 0, description: "success" }) })
-            .catch(err => { res.send({ code: 3, description: "user already exist"}) })
+            .catch(err => {
+                if (err.name == 'MongoError' && err.code === 11000)
+                    res.send({ code: 3, description: "unique field already exist", existed_field: Object.keys(err.keyValue)[0] })
+                else
+                    res.send({ code: 1, description: 'unknown error' })
+            })
         } catch (err) {
             res.send({ code: 1, description: 'unknown error' })
         }
