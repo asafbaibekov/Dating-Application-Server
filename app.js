@@ -7,6 +7,9 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+var server = require('http').Server(app); // intantiating the server
+var io = require('socket.io')(server);
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -16,3 +19,5 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/users', usersRouter);
 
 module.exports = app;
+
+module.exports = { app: app, server: server };
