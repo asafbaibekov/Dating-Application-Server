@@ -55,8 +55,8 @@ router.post('/register', async function(req, res, next) {
     }
 })
 
-function generateAccessToken(email) {
-    return jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+function generateAccessToken(id) {
+    return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
 }
 
 router.post('/login', async function(req, res, next) {
@@ -70,9 +70,9 @@ router.post('/login', async function(req, res, next) {
         User.findOne({ email }, async (err, user) => {
             if (err != null) return res.sendStatus(500)
             if (await bcrypt.compare(password, user.password)) {
-                let access_token = generateAccessToken(email)
-                let refresh_token = jwt.sign({ email }, process.env.REFRESH_TOKEN_SECRET)
-                User.findByIdAndUpdate(user._id, { access_token, refresh_token }, (err) => {
+                let access_token = generateAccessToken(user.id)
+                let refresh_token = jwt.sign({ user_id: user.id }, process.env.REFRESH_TOKEN_SECRET)
+                User.findByIdAndUpdate(user.id, { access_token, refresh_token }, (err) => {
                     if (err != null) return res.sendStatus(500)
                     res.send({ accessToken: access_token, refreshToken: refresh_token })
                 })
@@ -90,8 +90,8 @@ router.post('/token', (req, res) => {
         if (err != null) return res.sendStatus(403)
         jwt.verify(user.refresh_token, process.env.REFRESH_TOKEN_SECRET, (err, payload) => {
             if (err) return res.sendStatus(403)
-            let access_token = generateAccessToken(payload.email)
-            User.findOneAndUpdate({ email: payload.email }, { access_token }, (err) => {
+            let access_token = generateAccessToken(payload.user_id)
+            User.findByIdAndUpdate(payload.id, { access_token }, (err) => {
                 if (err != null) return res.sendStatus(500)
                 res.send({ accessToken: access_token })
             })
@@ -104,7 +104,7 @@ router.delete('/logout', (req, res) => {
     User.findOne({ refresh_token }, (err, user) => {
         if (err != null) return res.sendStatus(403)
         if (user == null) return res.send({ code: 5, description: 'user not found'})
-        User.findByIdAndUpdate(user._id, { access_token: '', refresh_token: '' }, (err) => {
+        User.findByIdAndUpdate(user.id, { access_token: '', refresh_token: '' }, (err) => {
             if (err != null) return res.sendStatus(500)
             res.send({ code: 0, description: 'success' })
         })
