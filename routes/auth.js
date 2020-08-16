@@ -26,9 +26,9 @@ module.exports.http_auth = function (req, res, next) {
 module.exports.socket_auth = function (socket, next) {
     var token = socket.handshake.query.token;
     if (token == null)
-        return res.status(401).send({ code: 2, description: 'token required' })
+        return next(new Error({ code: 2, description: 'token required' }))
     if (token.split(' ')[0] !== 'Bearer' || token.split(' ')[1] == null)
-        return next(new Error('token required'))
+        return next(new Error({ code: 2, description: 'token required' }))
     var token = token.split(' ')[1]
     try {
         const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -36,10 +36,10 @@ module.exports.socket_auth = function (socket, next) {
         next();
     } catch (err) {
         if (err.name == "TokenExpiredError")
-            return next(new Error('token expired'))
+            return next(new Error({ code: 3, description: err.message }))
         if (err.name == "JsonWebTokenError")
-            return next(new Error(err.message))
+            return next({ code: 3, description: err.message })
         console.error(err)
-            return next(new Error('not authenticated'))
+            return next(new Error({ code: 3, description: "not authenticated" }))
     }
 }
