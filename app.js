@@ -20,10 +20,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
-app.use('/messaging', authenticate.http_auth, (req, res, next) => {
-    res.io = io;
-    next();
-}, messagingRouter);
+app.use('/messaging', authenticate.http_auth, messagingRouter);
 
 io.use(authenticate.socket_auth);
 

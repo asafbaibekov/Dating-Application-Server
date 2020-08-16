@@ -1,50 +1,58 @@
 var express = require('express');
 var router = express.Router();
 
-const User = require('../schemas/user')
 const Message = require("../schemas/message");
+const Chat = require("../schemas/chat");
 
-router.get('/messages/:receiver_id', (req, res) => {
-    let { receiver_id } = req.params
-    if (receiver_id == null) return res.send({ code: 2, description: 'receiver_id required' })
-    if (typeof receiver_id != 'string') return res.send({ code: 2, description: 'receiver_id must be string' })
-    User.findById(receiver_id)
-        .then(receiver => {
-            Message.find()
-                .where('sender_id').equals(req.user_id)
-                .where('receiver_id').equals(receiver._id)
-                .then(messages => {
-                    res.send({ code: 0, description: 'success', messages })
-                }).catch(err => {
-                    res.send({ code: 1, description: 'unknown error' })
-                });
-        })
-        .catch(err => res.send({ code: 5, description: 'receiver_id not found' }))
-});
+router.get('/chats', (req, res) => {
+    Chat.find({ users: { $in: [req.user_id] }}, (err, chats) => {
+        if (err != null) return res.send({ code: 1, description: 'unknown error' })
+        return res.send({ code: 0, description: 'success', chats })
+    })
+})
 
-router.post('/messages', (req, res) => {
-    let { receiver_id, message_text } = req.body
-    if (receiver_id == null) return res.send({ code: 2, description: 'receiver_id required' })
-    if (typeof receiver_id != 'string') return res.send({ code: 2, description: 'receiver_id must be string' })
-    if (message_text == null) return res.send({ code: 2, description: 'message_text required' })
-    if (typeof message_text != 'string') return res.send({ code: 2, description: 'message_text must be string' })
-    User.findById(receiver_id)
-        .then(receiver => {
-            Message
-                .create({
-                    sender_id: req.user_id,
-                    receiver_id: receiver._id,
-                    message_text
-                })
-                .then(message => {
-                    res.io.emit('message', message);
-                    res.send({ code: 0, description: 'success', message })
-                })
-                .catch(err => {
-                    res.send({ code: 1, description: 'unknown error' })
-                });
+router.get('/messages/:chat_id/', (req, res) => {
+    let { chat_id } = req.params
+    if (chat_id == null)
+        return res.send({ code: 2, description: 'chat_id required' })
+    if (typeof chat_id != 'string')
+        return res.send({ code: 2, description: 'chat_id must be string' })
+    Chat.findById(chat_id).orFail()
+        .then(chat => Message.find().where('chat_id').equals(chat._id))
+        .then(messages => {
+            res.send({ code: 0, description: 'success', messages })
         })
-        .catch(err => res.send({ code: 5, description: 'receiver_id not found' }))
+        .catch(err => {
+            if (err.name == 'CastError')
+                res.send({ code: 5, description: 'invalid id' })
+                else if (err.name == 'DocumentNotFoundError')
+                    res.send({ code: 2, description: 'receiver_id not found' });
+        })
+})
+
+router.get('/messages/:chat_id/:from_date/:to_date', (req, res) => {
+    let { chat_id, from_date, to_date } = req.params
+    from_date = new Date(from_date)
+    to_date = new Date(to_date)
+    if (chat_id == null)
+        return res.send({ code: 2, description: 'chat_id required' })
+    if (typeof chat_id != 'string')
+        return res.send({ code: 2, description: 'chat_id must be string' })
+    if (from_date == 'Invalid Date')
+        return res.send({ code: 2, description: 'from_date must be date' })
+    if (to_date == 'Invalid Date')
+        return res.send({ code: 2, description: 'to_date must be date' })
+    Chat.findById(chat_id).orFail()
+        .then(chat => Message.find({ createdAt : { $gte: new Date(from_date).toUTCString(), $lte: new Date(to_date).toUTCString() } }).where('chat_id').equals(chat._id))
+        .then(messages => {
+            res.send({ code: 0, description: 'success', messages })
+        })
+        .catch(err => {
+            if (err.name == 'CastError')
+                res.send({ code: 5, description: 'invalid id' })
+            else if (err.name == 'DocumentNotFoundError')
+                res.send({ code: 2, description: 'receiver_id not found' });
+        })
 });
 
 module.exports = router;
