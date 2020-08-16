@@ -79,7 +79,7 @@ router.post('/login', async function(req, res, next) {
                 let refresh_token = jwt.sign({ user_id: user.id }, process.env.REFRESH_TOKEN_SECRET)
                 User.findByIdAndUpdate(user.id, { access_token, refresh_token }, (err) => {
                     if (err != null) return res.sendStatus(500)
-                    res.send({ accessToken: access_token, refreshToken: refresh_token })
+                    res.send({ accessToken: access_token, refreshToken: refresh_token, user_id: user._id })
                 })
             } else {
                 res.send({ code: 4, description: 'not authenticated'})
