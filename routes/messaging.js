@@ -24,9 +24,9 @@ router.get('/messages/:chat_id/', (req, res) => {
         })
         .catch(err => {
             if (err.name == 'CastError')
-                res.send({ code: 5, description: 'invalid id' })
+                res.send({ code: 2, description: 'invalid id' })
                 else if (err.name == 'DocumentNotFoundError')
-                    res.send({ code: 2, description: 'receiver_id not found' });
+                    res.send({ code: 5, description: 'receiver_id not found' });
         })
 })
 
@@ -49,9 +49,9 @@ router.get('/messages/:chat_id/:from_date/:to_date', (req, res) => {
         })
         .catch(err => {
             if (err.name == 'CastError')
-                res.send({ code: 5, description: 'invalid id' })
+                res.send({ code: 2, description: 'invalid id' })
             else if (err.name == 'DocumentNotFoundError')
-                res.send({ code: 2, description: 'receiver_id not found' });
+                res.send({ code: 5, description: 'receiver_id not found' });
         })
 });
 

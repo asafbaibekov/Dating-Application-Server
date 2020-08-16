@@ -25,7 +25,7 @@ module.exports = function(io) {
                 })
                 .catch(err => {
                     if (err.name == 'DocumentNotFoundError')
-                        socket.emit('exception', { code: 2, description: 'receiver_id not found' });
+                        socket.emit('exception', { code: 5, description: 'receiver_id not found' });
                     else
                         socket.emit('exception', { code: 1, description: 'unkown error' });
                 })
@@ -46,9 +46,9 @@ module.exports = function(io) {
                 })
                 .catch(err => { 
                     if (err.name == 'CastError')
-                        socket.emit('exception', { code: 5, description: 'invalid id' }) 
+                        socket.emit('exception', { code: 2, description: 'invalid id' }) 
                     else if (err.name == 'DocumentNotFoundError')
-                        socket.emit('exception', { code: 2, description: 'receiver_id not found' })
+                        socket.emit('exception', { code: 5, description: 'receiver_id not found' })
                     else
                         socket.emit('exception', { code: 1, description: 'unknown error' }) 
                 })

@@ -50,7 +50,7 @@ router.post('/register', async function(req, res, next) {
             .then(doc => { res.send({ code: 0, description: "success" }) })
             .catch(err => {
                 if (err.name == 'MongoError' && err.code === 11000)
-                    res.send({ code: 3, description: "unique field already exist", existed_field: Object.keys(err.keyValue)[0] })
+                    res.send({ code: 4, description: "unique field already exist", existed_field: Object.keys(err.keyValue)[0] })
                 else
                     res.send({ code: 1, description: 'unknown error' })
             })
@@ -82,7 +82,7 @@ router.post('/login', async function(req, res, next) {
                     res.send({ accessToken: access_token, refreshToken: refresh_token, user_id: user._id })
                 })
             } else {
-                res.send({ code: 4, description: 'not authenticated'})
+                res.send({ code: 3, description: 'not authenticated'})
             }
         })
     }
@@ -108,7 +108,7 @@ router.delete('/logout', (req, res) => {
     let refresh_token = req.body.token
     User.findOne({ refresh_token }, (err, user) => {
         if (err != null) return res.sendStatus(403)
-        if (user == null) return res.send({ code: 2, description: 'user not found'})
+        if (user == null) return res.send({ code: 5, description: 'user not found'})
         User.findByIdAndUpdate(user.id, { access_token: '', refresh_token: '' }, (err) => {
             if (err != null) return res.sendStatus(500)
             res.send({ code: 0, description: 'success' })
