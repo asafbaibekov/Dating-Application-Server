@@ -23,5 +23,7 @@ app.use('/users', usersRouter);
 app.use('/messaging', authenticate.http_auth, messagingRouter);
 
 io.use(authenticate.socket_auth);
+io.of('/chatroom').use(authenticate.socket_auth);
+require('./socket/chatroom')(io)
 
 module.exports = { app: app, server: server };
