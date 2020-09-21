@@ -1,8 +1,64 @@
 var express = require('express');
 var router = express.Router();
 
+const User = require("../schemas/user")
 const Message = require("../schemas/message");
 const Chat = require("../schemas/chat");
+
+var formidable = require('formidable');
+
+var { upload_file } = require('../helpers/google-cloud-storage')
+
+router.post('/message', async (req, res, next) => {
+    var form = new formidable.IncomingForm({ keepExtensions: true });
+    form.parse(req, async (err, fields, files) => {
+        if (err)
+            return res.send({ code: 1, description: "unknown error" })
+
+        let { receiver_id, message_text } = fields
+        if (receiver_id == null)
+            return res.send({ code: 2, description: 'receiver_id required' })
+        if (typeof receiver_id != 'string')
+            return res.send({ code: 2, description: 'receiver_id must be string' })
+
+        try {
+            var image_url = null
+            var audio_url = null
+            let { message_image, message_audio } = files
+            if (message_image != null) {
+                if (message_image.type.split('/')[0] != 'image')
+                    return res.send({ code: 2, description: 'message_image must be image file' })
+                image_url = await upload_file(message_image.path)
+            }
+            if (message_audio != null) {
+                if (message_audio.type.split('/')[0] != 'audio')
+                    return res.send({ code: 2, description: 'message_audio must be audio file' })
+                audio_url = await upload_file(message_audio.path)
+            }            
+            User.findById(receiver_id).orFail()
+                    .then(receiver => {
+                        return Chat.findOne({ users: { $all: [req.user_id, receiver._id] }})
+                    })
+                    .then(chat => {
+                        return Message.create({ chat_id: chat._id, sender_id: req.user_id, receiver_id: receiver_id, message_text, message_image: image_url, message_audio: audio_url })
+                    })
+                    .then(message => {
+                        res.send({ code: 0, description: 'success', message })
+                    })
+                    .catch(err => { 
+                        if (err.name == 'CastError')
+                            res.send({ code: 2, description: 'invalid id' })
+                        else if (err.name == 'DocumentNotFoundError')
+                            res.send({ code: 5, description: 'receiver_id not found' })
+                        else
+                            res.send({ code: 1, description: 'unknown error' })
+                    })
+        } catch (error) {
+            console.error(error)
+            res.send({ code: 1, description: "unknown error" })
+        }
+    })
+});
 
 router.get('/chats', (req, res) => {
     Chat.find({ users: { $in: [req.user_id] }}, (err, chats) => {

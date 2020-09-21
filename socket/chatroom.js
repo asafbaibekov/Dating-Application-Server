@@ -30,18 +30,9 @@ module.exports = function(io) {
                         socket.emit('exception', { code: 1, description: 'unkown error' });
                 })
         });
-        socket.on('newMessage', function(receiver_id, message_text) {
-            if (receiver_id == null) return socket.emit('exception', { code: 2, description: 'receiver_id required' });
-            if (typeof receiver_id != 'string') return socket.emit('exception', { code: 2, description: 'receiver_id must be string' });
-            User.findById(receiver_id).orFail()
-                .then(receiver => {
-                    return Chat.findOne({ users: { $all: [socket.user_id, receiver._id] }})
-                })
-                .then(chat => { 
-                    return Message.create({ chat_id: chat._id, sender_id: socket.user_id, receiver_id: receiver_id, message_text })
-                })
+        socket.on('message_received', function(message_id) {
+            Message.findById(message_id).orFail()
                 .then(message => {
-                    socket.emit('addMessage', { code: 0, description: 'success', message });
                     socket.in(message.chat_id).emit('addMessage', { code: 0, description: 'success', message });
                 })
                 .catch(err => { 
@@ -52,7 +43,7 @@ module.exports = function(io) {
                     else
                         socket.emit('exception', { code: 1, description: 'unknown error' }) 
                 })
-        });
+        })
         socket.on('disconnect', function() {
             Chat.findOneAndUpdate({ $pull: { connections: { user_id: { $in: [socket.user_id] } } } })
                 .then(chat => {
