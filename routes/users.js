@@ -32,21 +32,22 @@ router.post('/register', async function(req, res, next) {
     else if (typeof gender != 'string') res.send({ code: 2, description: 'gender must be string' })
     else if (gender != 'male' && gender != 'female') res.send({ code: 2, description: 'gender must be male of female' })
     else {
-    try {
-        let salt = await bcrypt.genSalt(saltRounds);
-        let hashed_password = await bcrypt.hash(password, salt)
-        new User({
-            name,
-            email,
-            password: hashed_password,
-            mobile,
-            birth_date: {
-                day: birth_date.day,
-                month: birth_date.month,
-                year: birth_date.year
-            },
-            gender: { enum: [ gender ] }
-        }).save()
+        try {
+            let salt = await bcrypt.genSalt(saltRounds);
+            let hashed_password = await bcrypt.hash(password, salt)
+            new User({
+                name,
+                email,
+                password: hashed_password,
+                mobile,
+                birth_date: {
+                    day: birth_date.day,
+                    month: birth_date.month,
+                    year: birth_date.year
+                },
+                gender: { enum: [ gender ] }
+            })
+            .save()
             .then(doc => { res.send({ code: 0, description: "success" }) })
             .catch(err => {
                 if (err.name == 'MongoError' && err.code === 11000)
