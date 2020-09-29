@@ -78,15 +78,15 @@ router.post('/login', async function(req, res, next) {
     else {
         User.findOne({ email }, async (err, user) => {
             if (err != null) return res.sendStatus(500)
-            if (await bcrypt.compare(password, user.password)) {
+            if (await !bcrypt.compare(password, user.password)) res.send({ code: 3, description: 'not authenticated' })
+            else if (user.is_mobile_verified === false) res.send({ code: 3, description: 'phone is not verified yet' })
+            else {
                 let access_token = generateAccessToken(user.id)
                 let refresh_token = jwt.sign({ user_id: user.id }, process.env.REFRESH_TOKEN_SECRET)
                 User.findByIdAndUpdate(user.id, { access_token, refresh_token }, (err) => {
                     if (err != null) return res.sendStatus(500)
                     res.send({ accessToken: access_token, refreshToken: refresh_token, user_id: user._id })
                 })
-            } else {
-                res.send({ code: 3, description: 'not authenticated'})
             }
         })
     }
