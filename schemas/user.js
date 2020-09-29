@@ -36,6 +36,11 @@ var userSchema = new mongoose.Schema({
           return validator.isMobilePhone(value)
         }
     },
+    is_mobile_verified: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
     birth_date: {
       day: { type: Number, min: 1, max: 31, required: true },
       month: { type: Number, min: 1, max: 12, required: true },
