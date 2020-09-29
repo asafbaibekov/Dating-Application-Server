@@ -9,6 +9,10 @@ const saltRounds = 10;
 
 var jwt = require('jsonwebtoken')
 
+require('dotenv').config()
+
+const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
 router.post('/register', async function(req, res, next) {
     let { name, email, password, mobile, birth_date, gender } = req.body
     let birth_date_formatted = `${birth_date.year}-${birth_date.month}-${birth_date.day}`
@@ -51,7 +55,8 @@ router.post('/register', async function(req, res, next) {
                 gender: { enum: [ gender ] }
             })
             .save()
-            .then(doc => { res.send({ code: 0, description: "success" }) })
+            .then(user => client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' }))
+            .then(verification => { res.send({ code: 0, description: "success" }) })
             .catch(err => {
                 if (err.name == 'MongoError' && err.code === 11000)
                     res.send({ code: 4, description: "unique field already exist", existed_field: Object.keys(err.keyValue)[0] })
@@ -62,6 +67,64 @@ router.post('/register', async function(req, res, next) {
             res.send({ code: 1, description: 'unknown error' })
         }
     }
+})
+
+router.post('/resend_sms', (req, res) => {
+    let { mobile } = req.body;
+    User.findOne({ mobile }).orFail()
+        .then(user => {
+            if (user.is_mobile_verified) {
+                let error = new Error()
+                error.name = 'AlreadyVerifiedPhoneNumber'
+                error.message = 'phone number already verified'
+                throw error
+            }
+            else return client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' })
+        })
+        .then(verification => { res.send({ code: 0, description: "success" }) })
+        .catch(error => {
+            if (error.name == 'DocumentNotFoundError')
+                res.send({ code: 5, description: 'user not found' })
+            else if (error.name == 'AlreadyVerifiedPhoneNumber')
+                res.send({ code: 4, description: error.message })
+            else
+                res.send({ code: 1, description: 'unknown error' })
+        })
+})
+
+router.post('/verify_sms', (req, res) => {
+    let { mobile, code } = req.body;
+    User.findOne({ mobile }).orFail()
+        .then(user => {
+            if (user.is_mobile_verified) {
+                let error = new Error()
+                error.name = 'AlreadyVerifiedPhoneNumber'
+                error.message = 'phone number already verified'
+                throw error
+            }
+            else return client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verificationChecks.create({ to: mobile, code })
+        })
+        .then(verification => verification.status == "approved")
+        .then(is_verified => {
+            if (!is_verified) {
+                let error = new Error()
+                error.name = 'IncorrectVerificationCode'
+                error.message = 'incorrect verification code'
+                throw error
+            }
+            else return User.findOneAndUpdate({ mobile }, { is_mobile_verified: true }).orFail()
+        })
+        .then(user => { res.send({ code: 0, description: "success" }) })
+        .catch(error => {
+            if (error.name == 'DocumentNotFoundError')
+                res.send({ code: 5, description: 'user not found' })
+            else if (error.name == 'AlreadyVerifiedPhoneNumber')
+                res.send({ code: 4, description: error.message })
+            else if (error.name == 'IncorrectVerificationCode')
+                res.send({ code: 2, description: error.message })
+            else
+                res.send({ code: 1, description: 'unknown error' })
+        });
 })
 
 function generateAccessToken(id) {
