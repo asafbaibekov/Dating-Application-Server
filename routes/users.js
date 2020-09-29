@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var validator = require('validator')
+var moment = require('moment')
 var User = require('../schemas/user')
 
 var bcrypt = require('bcrypt');
@@ -10,6 +11,7 @@ var jwt = require('jsonwebtoken')
 
 router.post('/register', async function(req, res, next) {
     let { name, email, password, mobile, birth_date, gender } = req.body
+    let birth_date_formatted = `${birth_date.year}-${birth_date.month}-${birth_date.day}`
     if (name == null) res.send({ code: 2, description: 'name required' })
     else if (typeof name != 'string') res.send({ code: 2, description: 'name must be string' })
     else if (email == null) res.send({ code: 2, description: 'email required' })
@@ -28,6 +30,7 @@ router.post('/register', async function(req, res, next) {
     else if (typeof birth_date.month != 'number') res.send({ code: 2, description: 'birth_date.month must be number' })
     else if (birth_date.year == null) res.send({ code: 2, description: 'birth_date.year required' })
     else if (typeof birth_date.year != 'number') res.send({ code: 2, description: 'birth_date.year must be number' })
+    else if (moment(birth_date_formatted, 'YYYY-MM-DD', true).isValid()) res.send({ code: 2, description: 'birth_date is not valid date' })
     else if (gender == null) res.send({ code: 2, description: 'gender required' })
     else if (typeof gender != 'string') res.send({ code: 2, description: 'gender must be string' })
     else if (gender != 'male' && gender != 'female') res.send({ code: 2, description: 'gender must be male of female' })
