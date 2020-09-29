@@ -30,7 +30,7 @@ router.post('/register', async function(req, res, next) {
     else if (typeof birth_date.month != 'number') res.send({ code: 2, description: 'birth_date.month must be number' })
     else if (birth_date.year == null) res.send({ code: 2, description: 'birth_date.year required' })
     else if (typeof birth_date.year != 'number') res.send({ code: 2, description: 'birth_date.year must be number' })
-    else if (moment(birth_date_formatted, 'YYYY-MM-DD', true).isValid()) res.send({ code: 2, description: 'birth_date is not valid date' })
+    else if (!moment(birth_date_formatted, 'YYYY-MM-DD', true).isValid()) res.send({ code: 2, description: 'birth_date is not valid date' })
     else if (gender == null) res.send({ code: 2, description: 'gender required' })
     else if (typeof gender != 'string') res.send({ code: 2, description: 'gender must be string' })
     else if (gender != 'male' && gender != 'female') res.send({ code: 2, description: 'gender must be male of female' })
