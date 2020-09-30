@@ -52,7 +52,7 @@ router.post('/register', async function(req, res, next) {
                     month: birth_date.month,
                     year: birth_date.year
                 },
-                gender: { enum: [ gender ] }
+                gender
             })
             .save()
             .then(user => client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' }))

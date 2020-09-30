@@ -47,6 +47,7 @@ var userSchema = new mongoose.Schema({
       year: { type: Number, required: true }
     },
     gender: {
+      type: String, 
       enum: ['male', 'female']
     }
 });
