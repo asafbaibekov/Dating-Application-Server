@@ -4,7 +4,7 @@ var path = require('path');
 var fs = require('fs');
 
 var bucket = new Storage({
-    keyFilename: path.join(__dirname, '../alanica-dates-288219-b1f848da3827.json'),
+    keyFilename: path.join(__dirname, '../alanica-dates-storage-credential.json'),
     projectId: 'alanica-dates-288219'
 }).bucket('alanica-dates-288219.appspot.com')
 
