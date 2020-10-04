@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var usersRouter = require('./routes/users');
+var profileRouter = require('./routes/profile');
 var messagingRouter = require('./routes/messaging');
 
 var app = express();
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
+app.use('/profile', authenticate.http_auth, profileRouter);
 app.use('/messaging', authenticate.http_auth, messagingRouter);
 
 io.use(authenticate.socket_auth);
