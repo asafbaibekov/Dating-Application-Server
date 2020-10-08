@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 var validator = require('validator')
-var moment = require('moment')
 var User = require('../schemas/user')
 
 var bcrypt = require('bcrypt');
@@ -26,34 +25,11 @@ router.post('/register', async function(req, res, next) {
     else if (mobile == null) res.send({ code: 2, description: 'mobile required' })
     else if (typeof mobile != 'string') res.send({ code: 2, description: 'mobile must be string' })
     else if (!validator.isMobilePhone(mobile)) res.send({ code: 2, description: 'mobile must be valid' })
-    else if (birth_date == null) res.send({ code: 2, description: 'birth_date required' })
-    else if (typeof birth_date != 'object') { console.log(typeof birth_date); res.send({ code: 2, description: 'birth_date must be object' }) }
-    else if (birth_date.day == null) res.send({ code: 2, description: 'birth_date.day required' })
-    else if (typeof birth_date.day != 'number') res.send({ code: 2, description: 'birth_date.day must be number' })
-    else if (birth_date.month == null) res.send({ code: 2, description: 'birth_date.month required' })
-    else if (typeof birth_date.month != 'number') res.send({ code: 2, description: 'birth_date.month must be number' })
-    else if (birth_date.year == null) res.send({ code: 2, description: 'birth_date.year required' })
-    else if (typeof birth_date.year != 'number') res.send({ code: 2, description: 'birth_date.year must be number' })
-    else if (!moment(birth_date_formatted, 'YYYY-M-D', true).isValid()) res.send({ code: 2, description: 'birth_date is not valid date' })
-    else if (gender == null) res.send({ code: 2, description: 'gender required' })
-    else if (typeof gender != 'string') res.send({ code: 2, description: 'gender must be string' })
-    else if (gender != 'male' && gender != 'female') res.send({ code: 2, description: 'gender must be male of female' })
     else {
         try {
             let salt = await bcrypt.genSalt(saltRounds);
             let hashed_password = await bcrypt.hash(password, salt)
-            new User({
-                name,
-                email,
-                password: hashed_password,
-                mobile,
-                birth_date: {
-                    day: birth_date.day,
-                    month: birth_date.month,
-                    year: birth_date.year
-                },
-                gender
-            })
+            new User({ name, email, password: hashed_password, mobile })
             .save()
             .then(user => client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' }))
             .then(verification => { res.send({ code: 0, description: "success" }) })

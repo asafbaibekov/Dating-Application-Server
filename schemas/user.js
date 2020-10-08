@@ -41,14 +41,10 @@ var userSchema = new mongoose.Schema({
       required: true,
       default: false
     },
-    birth_date: {
-      day: { type: Number, min: 1, max: 31, required: true },
-      month: { type: Number, min: 1, max: 12, required: true },
-      year: { type: Number, required: true }
-    },
-    gender: {
-      type: String, 
-      enum: ['male', 'female']
+    profile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Profile',
+      unique: true
     }
 });
 
