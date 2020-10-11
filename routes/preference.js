@@ -4,6 +4,19 @@ var router = express.Router();
 const User = require("../schemas/user")
 const Preference = require("../schemas/preference")
 
+router.get('/me', (req, res) => {
+    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified').populate('preference').orFail()
+        .then(user => {
+            res.send({ code: 0, description: 'success', user })
+        })
+        .catch(error => {
+            if (error.name == 'DocumentNotFoundError')
+                res.send({ code: 5, description: 'user_id not found' })
+            else
+                res.send({ code: 1, description: "unknown error" })
+        })
+})
+
 router.put('/create', (req, res) => {
     let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique } = req.body
     let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique }
