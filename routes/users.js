@@ -13,8 +13,7 @@ require('dotenv').config()
 const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 router.post('/register', async function(req, res, next) {
-    let { name, email, password, mobile, birth_date, gender } = req.body
-    let birth_date_formatted = `${birth_date.year}-${birth_date.month}-${birth_date.day}`
+    let { name, email, password, mobile } = req.body
     if (name == null) res.send({ code: 2, description: 'name required' })
     else if (typeof name != 'string') res.send({ code: 2, description: 'name must be string' })
     else if (email == null) res.send({ code: 2, description: 'email required' })
