@@ -9,11 +9,10 @@ var formidable = require('formidable');
 
 var { upload_file } = require('../helpers/google-cloud-storage')
 
-router.post('/message', async (req, res, next) => {
+router.post('/message', (req, res) => {
     var form = new formidable.IncomingForm({ keepExtensions: true });
     form.parse(req, async (err, fields, files) => {
-        if (err)
-            return res.send({ code: 1, description: "unknown error" })
+        if (err) return res.send({ code: 1, description: "unknown error" })
 
         let { receiver_id, message_text } = fields
         if (receiver_id == null)
@@ -36,12 +35,8 @@ router.post('/message', async (req, res, next) => {
                 audio_url = await upload_file(message_audio.path)
             }            
             User.findById(receiver_id).orFail()
-                    .then(receiver => {
-                        return Chat.findOne({ users: { $all: [req.user_id, receiver._id] }})
-                    })
-                    .then(chat => {
-                        return Message.create({ chat_id: chat._id, sender_id: req.user_id, receiver_id: receiver_id, message_text, message_image: image_url, message_audio: audio_url })
-                    })
+                    .then(receiver => Chat.findOne({ users: { $all: [req.user_id, receiver._id] }}))
+                    .then(chat => Message.create({ chat_id: chat._id, sender_id: req.user_id, receiver_id: receiver_id, message_text, message_image: image_url, message_audio: audio_url }))
                     .then(message => {
                         res.send({ code: 0, description: 'success', message })
                     })
@@ -54,7 +49,6 @@ router.post('/message', async (req, res, next) => {
                             res.send({ code: 1, description: 'unknown error' })
                     })
         } catch (error) {
-            console.error(error)
             res.send({ code: 1, description: "unknown error" })
         }
     })

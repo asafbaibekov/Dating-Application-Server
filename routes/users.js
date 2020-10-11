@@ -12,7 +12,7 @@ require('dotenv').config()
 
 const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-router.post('/register', async function(req, res, next) {
+router.post('/register', function(req, res, next) {
     let { name, email, password, mobile } = req.body
     if (name == null) res.send({ code: 2, description: 'name required' })
     else if (typeof name != 'string') res.send({ code: 2, description: 'name must be string' })
@@ -25,11 +25,9 @@ router.post('/register', async function(req, res, next) {
     else if (typeof mobile != 'string') res.send({ code: 2, description: 'mobile must be string' })
     else if (!validator.isMobilePhone(mobile)) res.send({ code: 2, description: 'mobile must be valid' })
     else {
-        try {
-            let salt = await bcrypt.genSalt(saltRounds);
-            let hashed_password = await bcrypt.hash(password, salt)
-            new User({ name, email, password: hashed_password, mobile })
-            .save()
+        bcrypt.genSalt(saltRounds)
+            .then(salt => bcrypt.hash(password, salt))
+            .then(hashed_password => User.create({ name, email, password: hashed_password, mobile }))
             .then(user => client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' }))
             .then(verification => { res.send({ code: 0, description: "success" }) })
             .catch(err => {
@@ -38,9 +36,6 @@ router.post('/register', async function(req, res, next) {
                 else
                     res.send({ code: 1, description: 'unknown error' })
             })
-        } catch (err) {
-            res.send({ code: 1, description: 'unknown error' })
-        }
     }
 })
 
@@ -106,7 +101,7 @@ function generateAccessToken(id) {
     return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
 }
 
-router.post('/login', async function(req, res, next) {
+router.post('/login', function(req, res, next) {
     let { email, password } = req.body
     if (email == null) res.send({ code: 2, description: 'email required' })
     else if (typeof email != 'string') res.send({ code: 2, description: 'email must be string' })
@@ -114,19 +109,36 @@ router.post('/login', async function(req, res, next) {
     else if (password == null) res.send({ code: 2, description: 'password required' })
     else if (typeof password != 'string') res.send({ code: 2, description: 'password must be string' })
     else {
-        User.findOne({ email }, async (err, user) => {
-            if (err != null) return res.sendStatus(500)
-            if (await !bcrypt.compare(password, user.password)) res.send({ code: 3, description: 'not authenticated' })
-            else if (user.is_mobile_verified === false) res.send({ code: 3, description: 'phone is not verified yet' })
-            else {
-                let access_token = generateAccessToken(user.id)
-                let refresh_token = jwt.sign({ user_id: user.id }, process.env.REFRESH_TOKEN_SECRET)
-                User.findByIdAndUpdate(user.id, { access_token, refresh_token }, (err) => {
-                    if (err != null) return res.sendStatus(500)
-                    res.send({ accessToken: access_token, refreshToken: refresh_token, user_id: user._id })
-                })
-            }
-        })
+        User.findOne({ email })
+            .then(user => {
+                if (!bcrypt.compareSync(password, user.password)) {
+                    let error = new Error()
+                    error.name = 'NotAuthenticated'
+                    error.message = 'incorrect password'
+                    throw error
+                } else if (user.is_mobile_verified === false) {
+                    let error = new Error()
+                    error.name = 'NotVerifiedPhoneNumber'
+                    error.message = 'phone is not verified yet'
+                    throw error
+                } else {
+                    let access_token = generateAccessToken(user.id)
+                    let refresh_token = jwt.sign({ user_id: user._id }, process.env.REFRESH_TOKEN_SECRET)
+                    return User.findByIdAndUpdate(user._id, { access_token, refresh_token })
+                }
+            })
+            .then(user => {
+                res.send({ accessToken: user.access_token, refreshToken: user.refresh_token, user_id: user._id })
+            })
+            .catch(error => {
+                if (error.name == 'NotAuthenticated')
+                    res.send({ code: 3, description: error.message })
+                else if (error.name == 'NotVerifiedPhoneNumber')
+                    res.send({ code: 3, description: error.message })
+                else
+                    res.send({ code: 1, description: 'unknown error' })
+            })
+        
     }
 })
 
