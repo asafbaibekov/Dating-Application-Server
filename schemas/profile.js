@@ -55,7 +55,8 @@ var profileSchema = new mongoose.Schema({
         required: true
     },
     zodiac: {
-        type: String
+        type: String,
+        enum: zodiac.getNames('en')
     },
     alcohol: {
         type: String,
