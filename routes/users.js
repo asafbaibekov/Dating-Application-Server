@@ -144,18 +144,28 @@ router.post('/login', function(req, res, next) {
 
 router.post('/token', (req, res) => {
     let refresh_token = req.body.token
-    if (refresh_token == null) return res.sendStatus(401)
-    User.findOne({ refresh_token }, (err, user) => {
-        if (err != null) return res.sendStatus(403)
-        jwt.verify(user.refresh_token, process.env.REFRESH_TOKEN_SECRET, (err, payload) => {
-            if (err) return res.sendStatus(403)
-            let access_token = generateAccessToken(payload.user_id)
-            User.findByIdAndUpdate(payload.id, { access_token }, (err) => {
-                if (err != null) return res.sendStatus(500)
-                res.send({ accessToken: access_token })
+    if (refresh_token == null) return res.send({ code: 2, description: 'token required' })
+    User.findOne({ refresh_token }).orFail()
+        .then(user => {
+            return new Promise((resolve, reject) => {
+                jwt.verify(user.refresh_token, process.env.REFRESH_TOKEN_SECRET, (error, payload) => {
+                    if (error) reject(error)
+                    else resolve(payload)
+                })
             })
         })
-    })
+        .then(payload => User.findByIdAndUpdate(payload.user_id, { access_token: generateAccessToken(payload.user_id) }, { new: true }).orFail())
+        .then(user => {
+            res.send({ code: 0, description: 'success', access_token: user.access_token })
+        })
+        .catch(error => {
+            if (error.name == "JsonWebTokenError")
+                return res.send({ code: 3, description: error.message })
+            else if (error.name == 'DocumentNotFoundError')
+                return res.send({ code: 5, description: 'user not found for refresh_token' })
+            else
+                return res.send({ code: 1, description: "unknown error" })
+        })
 })
 
 router.delete('/logout', (req, res) => {
