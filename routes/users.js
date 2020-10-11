@@ -122,7 +122,7 @@ router.post('/login', function(req, res, next) {
                     error.message = 'phone is not verified yet'
                     throw error
                 } else {
-                    let access_token = generateAccessToken(user.id)
+                    let access_token = generateAccessToken(user._id)
                     let refresh_token = jwt.sign({ user_id: user._id }, process.env.REFRESH_TOKEN_SECRET)
                     return User.findByIdAndUpdate(user._id, { access_token, refresh_token })
                 }
