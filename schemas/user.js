@@ -45,6 +45,11 @@ var userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Profile',
       unique: true
+    },
+    preference: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Preference',
+      unique: true
     }
 });
 
