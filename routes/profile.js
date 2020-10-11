@@ -45,8 +45,10 @@ router.put('/create', (req, res) => {
 })
 
 router.patch('/update', (req, res) => {
+    let { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique } = req.body
+    let profile = { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
     User.findById(req.user_id)
-        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: req.body }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
+        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
         .then(profile => { 
             res.send({ code: 0, description: 'success', profile })
         })

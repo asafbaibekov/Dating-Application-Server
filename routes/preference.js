@@ -45,8 +45,10 @@ router.put('/create', (req, res) => {
 })
 
 router.patch('/update', (req, res) => {
+    let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique } = req.body
+    let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique }
     User.findById(req.user_id)
-        .then(user => Preference.findByIdAndUpdate(user.preference, { $set: req.body }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
+        .then(user => Preference.findByIdAndUpdate(user.preference, { $set: preference }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
         .then(preference => { 
             res.send({ code: 0, description: 'success', preference })
         })
