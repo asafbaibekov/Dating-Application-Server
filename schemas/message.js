@@ -19,11 +19,13 @@ const messageSchema = new mongoose.Schema(
             required: true
         },
         message_image: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'File',
             required: false
         },
         message_audio: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'File',
             required: false
         }
     }, { 

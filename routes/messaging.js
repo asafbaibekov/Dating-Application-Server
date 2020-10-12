@@ -4,6 +4,7 @@ var router = express.Router();
 const User = require("../schemas/user")
 const Message = require("../schemas/message");
 const Chat = require("../schemas/chat");
+const File = require('../schemas/file');
 
 var formidable = require('formidable');
 
@@ -21,22 +22,26 @@ router.post('/message', (req, res) => {
             return res.send({ code: 2, description: 'receiver_id must be string' })
 
         try {
-            var image_url = null
-            var audio_url = null
+            var image_file = null
+            var audio_file = null
             let { message_image, message_audio } = files
             if (message_image != null) {
                 if (message_image.type.split('/')[0] != 'image')
                     return res.send({ code: 2, description: 'message_image must be image file' })
-                image_url = await upload_file(message_image.path)
+                let object = await upload_file(message_image.path).then(object => File.create(object))
+                image_file = await File.create(object)
             }
             if (message_audio != null) {
                 if (message_audio.type.split('/')[0] != 'audio')
                     return res.send({ code: 2, description: 'message_audio must be audio file' })
-                audio_url = await upload_file(message_audio.path)
-            }            
+                let object = await upload_file(message_audio.path)
+                audio_file = await File.create(object)
+            }
             User.findById(receiver_id).orFail()
                 .then(receiver => Chat.findOne({ users: { $all: [req.user_id, receiver._id] }}))
-                .then(chat => Message.create({ chat_id: chat._id, sender_id: req.user_id, receiver_id: receiver_id, message_text, message_image: image_url, message_audio: audio_url }))
+                .then(chat => Message.create({ chat_id: chat._id, sender_id: req.user_id, receiver_id: receiver_id, message_text, message_image: image_file._id, message_audio: audio_file._id }))
+                .then(message => message.populate('message_image').execPopulate())
+                .then(message => message.populate('message_audio').execPopulate())
                 .then(message => {
                     res.send({ code: 0, description: 'success', message })
                 })
