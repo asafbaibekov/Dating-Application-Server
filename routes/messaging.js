@@ -28,7 +28,7 @@ router.post('/message', (req, res) => {
             if (message_image != null) {
                 if (message_image.type.split('/')[0] != 'image')
                     return res.send({ code: 2, description: 'message_image must be image file' })
-                let object = await upload_file(message_image.path).then(object => File.create(object))
+                let object = await upload_file(message_image.path)
                 image_file = await File.create(object)
             }
             if (message_audio != null) {
