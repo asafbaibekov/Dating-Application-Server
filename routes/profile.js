@@ -18,8 +18,8 @@ router.get('/me', (req, res) => {
 })
 
 router.put('/create', (req, res) => {
-    let { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique } = req.body
-    let profile = { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
+    let { birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique } = req.body
+    let profile = { birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique }
     User.findById(req.user_id)
         .then(user => {
             if (user.profile) {

@@ -24,10 +24,6 @@ var profileSchema = new mongoose.Schema({
         enum: ['football', 'basketball', 'read'],
         required: true
     },
-    city: {
-        type: String,
-        required: true
-    },
     height: {
         type: Number,
         min: 140,
