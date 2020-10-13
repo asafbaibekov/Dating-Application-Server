@@ -13,12 +13,11 @@ module.exports.http_auth = function (req, res, next) {
         const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
         req.user_id = payload.user_id
         next()
-    } catch (err) {
-        if (err.name == "TokenExpiredError")
+    } catch (error) {
+        if (error.name == "TokenExpiredError")
             return res.send({ code: 3, description: "token expired" })
-        if (err.name == "JsonWebTokenError")
-            return res.send({ code: 3, description: err.message })
-        console.error(err)
+        if (error.name == "JsonWebTokenError")
+            return res.send({ code: 3, description: error.message })
         return res.send({ code: 3, description: "not authenticated" })
     }
 }
@@ -34,12 +33,11 @@ module.exports.socket_auth = function (socket, next) {
         const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         socket.user_id = payload.user_id;
         next();
-    } catch (err) {
-        if (err.name == "TokenExpiredError")
-            return next(new Error({ code: 3, description: err.message }))
-        if (err.name == "JsonWebTokenError")
-            return next({ code: 3, description: err.message })
-        console.error(err)
-            return next(new Error({ code: 3, description: "not authenticated" }))
+    } catch (error) {
+        if (error.name == "TokenExpiredError")
+            return next(new Error({ code: 3, description: error.message }))
+        if (error.name == "JsonWebTokenError")
+            return next(new Error({ code: 3, description: error.message }))
+        return next(new Error({ code: 3, description: "not authenticated" }))
     }
 }
