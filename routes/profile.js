@@ -3,13 +3,19 @@ var router = express.Router();
 
 const User = require("../schemas/user")
 const Profile = require("../schemas/profile")
+const File = require("../schemas/file")
+
+var formidable = require('formidable');
+
+var { upload_profile_picture, delete_profile_picture } = require('../helpers/google-cloud-storage')
 
 router.get('/me', (req, res) => {
-    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified').populate('profile').orFail()
+    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified')
+        .populate('profile').populate({ path: 'profile', populate: { path: 'picture' }}).orFail()
         .then(user => {
             res.send({ code: 0, description: 'success', user })
         })
-        .catch(error => {
+        .catch(error => {      
             if (error.name == 'DocumentNotFoundError')
                 res.send({ code: 5, description: 'user_id not found' })
             else
@@ -49,7 +55,7 @@ router.patch('/update', (req, res) => {
     let profile = { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
     Object.keys(profile).forEach(key => (profile[key] == null) && delete profile[key]);
     User.findById(req.user_id)
-        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
+        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }).populate('picture'))
         .then(profile => { 
             res.send({ code: 0, description: 'success', profile })
         })
@@ -58,6 +64,59 @@ router.patch('/update', (req, res) => {
                 res.send({ code: 2, description: error.message })
             else
                 res.send({ code: 1, description: "unknown error" })
+        })
+})
+
+router.patch('/picture', (req, res) => {
+    var form = new formidable.IncomingForm({ keepExtensions: true, maxFileSize: 10 * 1024 * 1024 });
+    User.findById(req.user_id).orFail()
+        .then(user => Profile.findById(user.profile).orFail())
+        .then(profile => {
+            return new Promise((resolve, reject) => {
+                form.parse(req, (error, fields, files) => {
+                    if (error) { error.name = 'FormidableError'; reject(error) }
+                    else resolve({ fields, files })
+                })
+            })
+            .then(({ files }) => {
+                if (files.picture == null || files.picture.type == null) {
+                    let error = new Error()
+                    error.name = 'EmptyPicture'
+                    error.message = 'picture required'
+                    throw error
+                }
+                if (files.picture.type.split('/')[0] != 'image') {
+                    let error = new Error()
+                    error.name = 'FileTypeError'
+                    error.message = 'picture must be image type'
+                    throw error
+                }
+                if (profile.picture == null)
+                    return upload_profile_picture(files.picture.path)
+                return File.findByIdAndDelete(profile.picture)
+                    .then(file => delete_profile_picture(file.name))
+                    .then(response => upload_profile_picture(files.picture.path))
+            })
+            .then(object => File.create(object))
+            .then(file => Profile.findByIdAndUpdate(profile._id, { picture: file._id }, { new: true, runValidators: true }).orFail())
+            .then(profile => profile.populate('picture').execPopulate())
+            .then(profile => {
+                res.send({ code: 0, description: 'success', profile })
+            })
+        })
+        .catch(error => {
+            switch (error.name) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: 'profile not found for user, create profile before insert picture' })
+                    break
+                case 'EmptyPicture':
+                case 'FileTypeError':
+                case 'FormidableError':
+                    res.send({ code: 2, description: error.message })
+                    break
+                default:
+                    res.send({ code: 1, description: 'unknown error' })
+            }
         })
 })
 

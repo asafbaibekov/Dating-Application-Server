@@ -9,6 +9,11 @@ var profileSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    picture: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'File',
+        required: false
+    },
     job: {
         type: String,
         minlength: [3, 'job must be at least 3 characters.'],
