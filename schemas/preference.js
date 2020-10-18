@@ -49,7 +49,7 @@ var preferenceSchema = new mongoose.Schema({
     },
     children: {
         type: [String],
-        enum: ['have', "hwas_live_away", 'none']
+        enum: ['have', "have_live_away", 'none']
     },
     physique: {
         type: [String],
