@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 const zodiac = require('zodiac-signs')('en-US')
 
 var preferenceSchema = new mongoose.Schema({
+    gender: {
+        type: String,
+        enum: ['male', 'female'],
+        required: true
+    },
     min_age: {
         type: Number,
         min: 18,
