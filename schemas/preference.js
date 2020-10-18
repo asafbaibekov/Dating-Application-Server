@@ -14,17 +14,6 @@ var preferenceSchema = new mongoose.Schema({
         max: 80,
         required: true
     },
-    distance: {
-        type: Number,
-        min: 0,
-        max: 200,
-        default: 200,
-        required: true
-    },
-    zodiac: {
-        type: [String],
-        enum: zodiac.getNames('en')
-    },
     min_height: {
         type: Number,
         min: 140,
@@ -38,6 +27,17 @@ var preferenceSchema = new mongoose.Schema({
         max: 250,
         default: 250,
         required: true
+    },
+    distance: {
+        type: Number,
+        min: 0,
+        max: 200,
+        default: 200,
+        required: true
+    },
+    zodiac: {
+        type: [String],
+        enum: zodiac.getNames('en')
     },
     interests: {
         type: [String],
