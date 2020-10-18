@@ -42,23 +42,28 @@ var preferenceSchema = new mongoose.Schema({
     },
     zodiac: {
         type: [String],
-        enum: zodiac.getNames('en')
+        enum: zodiac.getNames('en'),
+        required: true
     },
     interests: {
         type: [String],
-        enum: ['football', 'basketball', 'read']
+        enum: ['football', 'basketball', 'read'],
+        required: true
     },
     alcohol: {
         type: [String],
-        enum: ['all_times', 'part_times', 'no_times']
+        enum: ['all_times', 'part_times', 'no_times'],
+        required: true
     },
     children: {
         type: [String],
-        enum: ['have', "have_live_away", 'none']
+        enum: ['have', "have_live_away", 'none'],
+        required: true
     },
     physique: {
         type: [String],
-        enum: ['over_weight', 'medium', 'shapely', 'skinny']
+        enum: ['over_weight', 'medium', 'shapely', 'skinny'],
+        required: true
     }
 });
 
