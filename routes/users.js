@@ -100,7 +100,7 @@ router.post('/login', function(req, res, next) {
             .then(user => {
                 let access_token = generateAccessToken(user._id)
                 let refresh_token = jwt.sign({ user_id: user._id }, process.env.REFRESH_TOKEN_SECRET)
-                return User.findByIdAndUpdate(user._id, { access_token, refresh_token })
+                return User.findByIdAndUpdate(user._id, { access_token, refresh_token }, { new: true })
             })
             .then(user => {
                 res.send({ accessToken: user.access_token, refreshToken: user.refresh_token, user_id: user._id })
