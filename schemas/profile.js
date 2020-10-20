@@ -44,14 +44,15 @@ var profileSchema = new mongoose.Schema({
     },
     location: {
         type: new mongoose.Schema({
-            longitude: {
-                type: Number,
+            type: {
+                type: String,
+                enum: ['Point'],
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
                 required: true
             },
-            latitude: {
-                type: Number,
-                required: true
-            }
         }, { _id : false, timestamps: true }),
         required: false
     },
@@ -81,6 +82,8 @@ var profileSchema = new mongoose.Schema({
         enum: ['over_weight', 'medium', 'shapely', 'skinny']
     }
 })
+
+profileSchema.index({ location: '2dsphere' });
 
 profileSchema.pre('findOneAndUpdate', function(next, docs) {
     if (this._update.$set && this._update.$set.birth_date)

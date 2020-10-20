@@ -8,7 +8,13 @@ module.exports = function(io) {
             let location = { longitude, latitude }
             Object.keys(location).forEach(key => (location[key] == null) && delete location[key]);
             User.findById(socket.user_id).orFail()
-                .then(user => Profile.findByIdAndUpdate(user.profile, { "location.longitude": location.longitude, "location.latitude": location.latitude }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail())
+                .then(user => Profile.findById(user.profile, '_id, location'))
+                .then(profile => {
+                    if (profile.location)
+                        return Profile.findByIdAndUpdate(profile._id, { $set: { "location.coordinates": coordinates } }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail()
+                    else
+                        return Profile.findByIdAndUpdate(profile._id, { location: { type: 'Point',  coordinates } }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail()
+                })
                 .then(profile => socket.emit('saved', { code: 0, description: 'success', profile }))
                 .catch(error => {
                     switch (error.name) {
