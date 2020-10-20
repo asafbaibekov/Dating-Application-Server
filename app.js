@@ -6,6 +6,7 @@ var logger = require('morgan');
 var usersRouter = require('./routes/users');
 var preferenceRouter = require('./routes/preference');
 var profileRouter = require('./routes/profile');
+var searchRouter = require('./routes/search');
 var messagingRouter = require('./routes/messaging');
 
 var app = express();
@@ -24,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/users', usersRouter);
 app.use('/preference', authenticate.http_auth, preferenceRouter);
 app.use('/profile', authenticate.http_auth, profileRouter);
+app.use('/search', authenticate.http_auth, searchRouter);
 app.use('/messaging', authenticate.http_auth, messagingRouter);
 
 io.use(authenticate.socket_auth);
