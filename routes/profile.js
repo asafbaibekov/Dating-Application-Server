@@ -120,4 +120,30 @@ router.patch('/picture', (req, res) => {
         })
 })
 
+router.patch('/location', (req, res) => {
+    let { longitude, latitude } = req.body
+    let coordinates = [longitude, latitude]
+    User.findById(req.user_id).orFail()
+        .then(user => Profile.findById(user.profile, '_id, location'))
+        .then(profile => {
+            if (profile.location)
+                return Profile.findByIdAndUpdate(profile._id, { $set: { "location.coordinates": coordinates } }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail()
+            else
+                return Profile.findByIdAndUpdate(profile._id, { location: { type: 'Point',  coordinates } }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail()
+        })
+        .then(profile => { res.send({ code: 0, description: 'success', profile }) })
+        .catch(error => {
+            switch (error.name) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: error.message });
+                    break
+                case 'ValidationError':
+                    res.send({ code: 2, description: error.message });
+                    break
+                default:
+                    res.send({ code: 1, description: 'unkown error' });
+            }
+        })
+})
+
 module.exports = router;
