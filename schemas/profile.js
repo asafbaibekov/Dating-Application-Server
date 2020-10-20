@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const zodiac = require('zodiac-signs')('en-US')
-const moment = require('moment')
 
 var profileSchema = new mongoose.Schema({
     user: {
@@ -36,19 +35,12 @@ var profileSchema = new mongoose.Schema({
         required: true
     },
     birth_date: {
-        type: new mongoose.Schema({
-            day: { type: Number, min: 1, max: 31, required: true },
-            month: { type: Number, min: 1, max: 12, required: true },
-            year: { type: Number, required: true },
-        }, { _id : false }),
-        validate: [{
-            validator: (value) => !moment(value, 'YYYY-M-D', true).isValid(),
-            msg: 'birth_date is not valid date'
-        }, {
-            validator: ({ day, month, year }) => Math.abs(new Date(Date.now() - new Date(year, month-1, day).getTime()).getUTCFullYear() - 1970) > 18,
+        type: Date,
+        required: true,
+        validate: {
+            validator: (value) => Math.abs(new Date(Date.now() - value.getTime()).getUTCFullYear() - 1970) > 18,
             msg: 'birth_date is less then 18 years'
-        }],
-        required: true
+        }
     },
     location: {
         type: new mongoose.Schema({
