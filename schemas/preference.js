@@ -64,6 +64,11 @@ var preferenceSchema = new mongoose.Schema({
         type: [String],
         enum: ['over_weight', 'medium', 'shapely', 'skinny'],
         required: true
+    },
+    smokes: {
+        type: [String],
+        enum: ['all_times', 'part_times', 'no_times'],
+        required: true
     }
 });
 

@@ -18,8 +18,8 @@ router.get('/me', (req, res) => {
 })
 
 router.put('/create', (req, res) => {
-    let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, gender } = req.body
-    let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, gender }
+    let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, smokes, gender } = req.body
+    let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, smokes, gender }
     User.findById(req.user_id)
         .then(user => {
             if (user.preference) {
@@ -45,8 +45,8 @@ router.put('/create', (req, res) => {
 })
 
 router.patch('/update', (req, res) => {
-    let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, gender } = req.body
-    let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, gender }
+    let { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, physique, smokes, gender } = req.body
+    let preference = { min_age, max_age, distance, zodiac, min_height, max_height, interests, alcohol, children, smokes, physique, gender }
     Object.keys(preference).forEach(key => (preference[key] == null) && delete preference[key]);
     User.findById(req.user_id)
         .then(user => Preference.findByIdAndUpdate(user.preference, { $set: preference }, { new: true, runValidators: true, setDefaultsOnInsert: true }))
