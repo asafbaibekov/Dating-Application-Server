@@ -17,7 +17,7 @@ var profile_pictures_bucket = storage.bucket('alanica-dates-profile-pictures')
  * @param {string} file_path
  * @return {Promise<String>}
  */
-exports.upload_file = (file_path) => {
+exports.upload_message_file = (file_path) => {
     let file = messages_bucket.file(uuidv4())
     return new Promise((resolve, reject) => {
         fs.createReadStream(file_path)

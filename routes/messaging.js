@@ -8,7 +8,7 @@ const File = require('../schemas/file');
 
 var formidable = require('formidable');
 
-var { upload_file } = require('../helpers/google-cloud-storage')
+var { upload_message_file } = require('../helpers/google-cloud-storage')
 
 router.post('/message', (req, res) => {
     var form = new formidable.IncomingForm({ keepExtensions: true, maxFileSize: 10 * 1024 * 1024 });
@@ -28,13 +28,13 @@ router.post('/message', (req, res) => {
             if (message_image != null) {
                 if (message_image.type.split('/')[0] != 'image')
                     return res.send({ code: 2, description: 'message_image must be image file' })
-                let object = await upload_file(message_image.path)
+                let object = await upload_message_file(message_image.path)
                 image_file = await File.create(object)
             }
             if (message_audio != null) {
                 if (message_audio.type.split('/')[0] != 'audio')
                     return res.send({ code: 2, description: 'message_audio must be audio file' })
-                let object = await upload_file(message_audio.path)
+                let object = await upload_message_file(message_audio.path)
                 audio_file = await File.create(object)
             }
             User.findById(receiver_id).orFail()
