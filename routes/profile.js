@@ -10,14 +10,13 @@ var formidable = require('formidable');
 var { upload_profile_picture, delete_profile_picture } = require('../helpers/google-cloud-storage')
 
 router.get('/me', (req, res) => {
-    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified')
-        .populate('profile').populate({ path: 'profile', populate: { path: 'picture' }}).orFail()
-        .then(user => {
-            res.send({ code: 0, description: 'success', user })
+    Profile.findOne({ user: req.user_id }).populate('picture').orFail()
+        .then(profile => {
+            res.send({ code: 0, description: 'success', profile })
         })
         .catch(error => {      
             if (error.name == 'DocumentNotFoundError')
-                res.send({ code: 5, description: 'user_id not found' })
+                res.send({ code: 5, description: error.message })
             else
                 res.send({ code: 1, description: "unknown error" })
         })

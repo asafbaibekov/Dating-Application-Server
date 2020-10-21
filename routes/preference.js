@@ -5,13 +5,14 @@ const User = require("../schemas/user")
 const Preference = require("../schemas/preference")
 
 router.get('/me', (req, res) => {
-    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified').populate('preference').orFail()
-        .then(user => {
-            res.send({ code: 0, description: 'success', user })
+    User.findById(req.user_id).orFail()
+        .then(user => Preference.findById(user.preference).orFail())
+        .then(preference => {
+            res.send({ code: 0, description: 'success', preference })
         })
         .catch(error => {
             if (error.name == 'DocumentNotFoundError')
-                res.send({ code: 5, description: 'user_id not found' })
+                res.send({ code: 5, description: error.message })
             else
                 res.send({ code: 1, description: "unknown error" })
         })
