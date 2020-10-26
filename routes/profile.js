@@ -36,7 +36,7 @@ router.put('/create', (req, res) => {
             else return Profile.create({ user: user._id,  ...profile })
         })
         .then(profile => User.findByIdAndUpdate(req.user_id, { profile: profile._id }, { new: true, projection: '-password -access_token -refresh_token -is_mobile_verified' }).populate('profile'))
-        .then(user => { res.send({ code: 0, description: 'success', user }) })
+        .then(user => { res.send({ code: 0, description: 'success', profile: user.profile }) })
         .catch(error => {
             if (error.name == 'DocumentAlreadyCreated')
                 res.send({ code: 4, description: error.message })
@@ -65,10 +65,10 @@ router.patch('/update', (req, res) => {
                     res.send({ code: 5, description: error.message });
                     break;
                 case 'ValidationError':
-                res.send({ code: 2, description: error.message })
+                    res.send({ code: 2, description: error.message })
                     break;
                 default:
-                res.send({ code: 1, description: "unknown error" })
+                    res.send({ code: 1, description: "unknown error" })
             }
         })
 })
