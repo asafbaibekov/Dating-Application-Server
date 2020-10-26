@@ -54,15 +54,22 @@ router.patch('/update', (req, res) => {
     let profile = { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
     Object.keys(profile).forEach(key => (profile[key] == null) && delete profile[key]);
     User.findById(req.user_id)
-        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }).populate('picture'))
+        .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail())
+        .then(profile => profile.populate('picture').execPopulate())
         .then(profile => { 
             res.send({ code: 0, description: 'success', profile })
         })
         .catch(error => {
-            if (error.name == "ValidationError")
+            switch (error.name) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: error.message });
+                    break;
+                case 'ValidationError':
                 res.send({ code: 2, description: error.message })
-            else
+                    break;
+                default:
                 res.send({ code: 1, description: "unknown error" })
+            }
         })
 })
 
