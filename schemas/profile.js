@@ -86,13 +86,16 @@ var profileSchema = new mongoose.Schema({
 profileSchema.index({ location: '2dsphere' });
 
 profileSchema.pre('findOneAndUpdate', function(next, docs) {
-    if (this._update.$set && this._update.$set.birth_date)
-        return this.model.findOneAndUpdate(this._conditions, { zodiac: zodiac.getSignByDate(this._update.$set.birth_date).name })
+    if (this._update.$set && this._update.$set.birth_date) {
+        let birth_date = new Date(this._update.$set.birth_date)
+        return this.model.findOneAndUpdate(this._conditions, { zodiac: zodiac.getSignByDate({ day: birth_date.getDate(), month: birth_date.getMonth() + 1 }).name })
+    }
     else next()
 })
 
 profileSchema.pre('save', function(next, docs) {
-    this.zodiac = zodiac.getSignByDate(this.birth_date).name
+    let birth_date = new Date(this.birth_date)
+    this.zodiac = zodiac.getSignByDate({ day: birth_date.getDate(), month: birth_date.getMonth() + 1 }).name
     next()
 })
 
