@@ -8,6 +8,8 @@ const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWI
 
 const User = require('../schemas/user')
 
+const authenticate = require('./auth')
+
 function generateAccessToken(id) {
     return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
 }
@@ -155,5 +157,18 @@ router.delete('/logout', (req, res) => {
         })
     })
 })
+
+router.get('/me', authenticate.http_auth, (req, res) => {
+    User.findById(req.user_id, '-password -access_token -refresh_token -is_mobile_verified').orFail()
+        .then(user => {
+            res.send({ code: 0, description: 'success', user })
+        })
+        .catch(error => {
+            if (error.name == 'DocumentNotFoundError')
+                res.send({ code: 5, description: error.message })
+            else
+                res.send({ code: 1, description: "unknown error" })
+        })
+});
 
 module.exports = router;
