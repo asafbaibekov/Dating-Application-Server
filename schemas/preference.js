@@ -3,7 +3,7 @@ const zodiac = require('zodiac-signs')('en-US')
 
 var preferenceSchema = new mongoose.Schema({
     gender: {
-        type: String,
+        type: [String],
         enum: ['male', 'female'],
         required: true
     },

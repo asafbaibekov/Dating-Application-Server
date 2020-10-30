@@ -38,8 +38,8 @@ router.get('/profiles', (req, res) => {
                 query.physique = { $in: user.preference.physique }
             if (user.preference.smokes && user.preference.smokes instanceof Array && user.preference.smokes.length > 0)
                 query.smokes = { $in: user.preference.smokes }
-            if (user.preference.gender)
-                query.gender = { $eq: user.preference.gender }
+            if (user.preference.gender && user.preference.gender instanceof Array && user.preference.gender.length > 0)
+                query.gender = { $in: user.preference.gender }
             return Profile.find({
                 user: { $ne: user._id },
                 birth_date: {
