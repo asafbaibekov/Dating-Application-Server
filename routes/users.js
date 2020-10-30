@@ -1,13 +1,16 @@
-var express = require('express');
-var router = express.Router();
-var validator = require('validator')
-var User = require('../schemas/user')
-
-var jwt = require('jsonwebtoken')
-
+const express = require('express');
+const router = express.Router();
+const validator = require('validator')
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+const User = require('../schemas/user')
+
+function generateAccessToken(id) {
+    return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+}
 
 router.post('/register', function(req, res, next) {
     let { name, email, password, mobile } = req.body
@@ -81,10 +84,6 @@ router.post('/verify_sms', (req, res) => {
                 res.send({ code: 1, description: 'unknown error' })
         });
 })
-
-function generateAccessToken(id) {
-    return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
-}
 
 router.post('/login', function(req, res, next) {
     let { email, password } = req.body
