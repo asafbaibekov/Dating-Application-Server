@@ -8,6 +8,11 @@ var profileSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    name: {
+        type: String,
+        required: true,
+        unique: false,
+    },
     picture: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'File',

@@ -23,8 +23,8 @@ router.get('/me', (req, res) => {
 })
 
 router.put('/create', (req, res) => {
-    let { birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique } = req.body
-    let profile = { birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique }
+    let { name, birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique } = req.body
+    let profile = { name, birth_date, gender, job, short_self_description, interests, height, alcohol, smokes, children, physique }
     User.findById(req.user_id)
         .then(user => {
             if (user.profile) {
@@ -50,8 +50,8 @@ router.put('/create', (req, res) => {
 })
 
 router.patch('/update', (req, res) => {
-    let { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique } = req.body
-    let profile = { birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
+    let { name, birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique } = req.body
+    let profile = { name, birth_date, gender, job, short_self_description, interests, living, height, alcohol, smokes, children, physique }
     Object.keys(profile).forEach(key => (profile[key] == null) && delete profile[key]);
     User.findById(req.user_id)
         .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail())

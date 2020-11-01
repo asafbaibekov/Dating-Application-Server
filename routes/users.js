@@ -15,8 +15,8 @@ function generateAccessToken(id) {
 }
 
 router.post('/register', function(req, res, next) {
-    let { name, email, password, mobile } = req.body
-    User.create({ name, email, password, mobile })
+    let { email, password, mobile } = req.body
+    User.create({ email, password, mobile })
         .then(user => client.verify.services(process.env.TWILIO_VERIFY_SERVICE_ID).verifications.create({ to: user.mobile, channel: 'sms' }))
         .then(verification => { res.send({ code: 0, description: "success" }) })
         .catch(error => {
