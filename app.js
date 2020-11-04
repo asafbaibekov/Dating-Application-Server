@@ -9,6 +9,7 @@ var profileRouter = require('./routes/profile');
 var searchRouter = require('./routes/search');
 var messagingRouter = require('./routes/messaging');
 var storyRouter = require('./routes/story');
+var coinsRouter = require('./routes/coin');
 
 var app = express();
 
@@ -29,6 +30,7 @@ app.use('/profile', authenticate.http_auth, profileRouter);
 app.use('/search', authenticate.http_auth, searchRouter);
 app.use('/messaging', authenticate.http_auth, messagingRouter);
 app.use('/story', authenticate.http_auth, storyRouter);
+app.use('/coin', authenticate.http_auth, coinsRouter);
 
 io.use(authenticate.socket_auth);
 io.of('/chatroom').use(authenticate.socket_auth);
