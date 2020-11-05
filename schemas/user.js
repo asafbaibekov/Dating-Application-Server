@@ -44,6 +44,10 @@ var userSchema = new mongoose.Schema({
       required: true,
       default: false
     },
+    friends: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Friend'
+    }],
     profile: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Profile',
