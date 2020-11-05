@@ -51,12 +51,14 @@ var userSchema = new mongoose.Schema({
     profile: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Profile',
-      unique: true
+      unique: true,
+      sparse: true
     },
     preference: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Preference',
-      unique: true
+      unique: true,
+      sparse: true
     }
 });
 
