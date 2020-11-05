@@ -36,6 +36,13 @@ exports.upload_message_file = (file_path) => {
                     .catch(reject);
             })
     })
+    .then(object =>{
+        return new Promise((resolve, reject) => {
+            fs.unlink(file_path, () => {
+                resolve(object)
+            })
+        })
+    })
 }
 
 /**
@@ -60,6 +67,13 @@ exports.upload_profile_picture = (file_path) => {
                     })
                     .catch(reject);
             })
+    })
+    .then(object =>{
+        return new Promise((resolve, reject) => {
+            fs.unlink(file_path, () => {
+                resolve(object)
+            })
+        })
     })
 }
 
@@ -94,6 +108,13 @@ exports.upload_story_file = (file_path) => {
                     })
                     .catch(reject);
             })
+    })
+    .then(object =>{
+        return new Promise((resolve, reject) => {
+            fs.unlink(file_path, () => {
+                resolve(object)
+            })
+        })
     })
 }
 
