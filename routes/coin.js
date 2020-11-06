@@ -1,54 +1,39 @@
 var express = require('express');
 var router = express.Router();
 
+const User = require('../schemas/user')
 const Coin = require('../schemas/coin')
 
-const authenticate = require('./auth')
-
-
-router.get('/me', authenticate.http_auth, (req, res) => {
-    let user = req.user_id
-    Coin.findOneAndUpdate({ user }, {}, { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true })
-    .then(newCoin => {
-        var incAmount = 1
-      
-    function checkCredit (last_login){
-        const second = 1000; // = 1000 milliseconds 
-        const hour = 3600 * second
-        let creditTime = 24 * hour
-        let currDate = new Date()       
-
-        if (currDate - newCoin.last_login >= creditTime ) return true
-        else return false
-    }
-
-    let isCredit = checkCredit (newCoin.last_login)
-    console.log("isCredit - ", isCredit)
-
-
-        if (isCredit) { // past 24 hours
-            Coin.findByIdAndUpdate({ _id: newCoin._id },  { $inc: { "amount": incAmount }, $set: { "last_login": new Date() }  }, { new: true })
-            .then(updtaeCoin => {
-                res.send({ code: 0, description: 'success to uptade', updtaeCoin })
+router.get('/me', (req, res) => {
+    User.findById(req.user_id).orFail()
+        .then(user => Coin.findOneAndUpdate({ user: user._id }, { }, { new: true, runValidators: true, upsert: true, setDefaultsOnInsert: true }))
+        .then(coin => {
+            return Coin.findOneAndUpdate({
+                _id: coin._id,
+                last_auto_add: {
+                    $lt: (function() {
+                        let date = new Date()
+                        date.setUTCHours(date.getUTCHours() - 24)
+                        return date
+                    }())
+                }
+            },
+            { $inc: { amount: 1 }, $set: { last_auto_add: new Date() } },
+            { new: true, runValidators: true }).orFail()
+            .catch(error => {
+                if (error.name == 'DocumentNotFoundError') return coin
+                else throw error
             })
-            .catch(error => { 
-                if (error.name == 'DocumentNotFoundError')
-                    res.send({ code: 5, description: error.message })
-                else
-                    res.send({ code: 1, description: error.message })
-            })
-        }
-        else {
-            res.send({ code: 0, description: 'success', newCoin })
-        }              
-    })
-    .catch(error => { 
-        if (error.name == 'DocumentNotFoundError')
-            res.send({ code: 5, description: error.message })
-        else
-            res.send({ code: 1, description: "unknown error on create" })
-    })
+        })
+        .then(coin => {
+            res.send({ code: 0, description: 'success', coin })
+        })
+        .catch(error => {
+            if (error.name == 'DocumentNotFoundError')
+                res.send({ code: 5, description: error.message })
+            else
+                res.send({ code: 1, description: "unknown error" })
+        })
 })
-
 
 module.exports = router;
