@@ -3,7 +3,6 @@ var router = express.Router();
 
 const User = require("../schemas/user")
 const Profile = require("../schemas/profile");
-const preference = require('../schemas/preference');
 
 router.get('/profiles', (req, res) => {
     User.findById(req.user_id).orFail().populate('profile').populate('preference')
