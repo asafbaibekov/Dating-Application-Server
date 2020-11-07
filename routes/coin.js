@@ -3,24 +3,22 @@ var router = express.Router();
 
 const Coin = require('../schemas/coin')
 
-const authenticate = require('./auth')
 
-
-router.get('/me', authenticate.http_auth, (req, res) => {
+router.get('/me', (req, res) => {
     let user = req.user_id
     Coin.findOneAndUpdate({ user }, {}, { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true })
     .then(newCoin => {
         var incAmount = 1
-      
-    function checkCredit (last_login){
-        const second = 1000; // = 1000 milliseconds 
-        const hour = 3600 * second
-        let creditTime = 24 * hour
-        let currDate = new Date()       
+        
+        function checkCredit (last_login){
+            const second = 1000; // = 1000 milliseconds 
+            const hour = 3600 * second
+            let creditTime = 24 * hour
+            let currDate = new Date()       
 
-        if (currDate - newCoin.last_login >= creditTime ) return true
-        else return false
-    }
+            if (currDate - newCoin.last_login >= creditTime ) return true
+            else return false
+        }
 
     let isCredit = checkCredit (newCoin.last_login)
     console.log("isCredit - ", isCredit)
