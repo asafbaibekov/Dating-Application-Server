@@ -71,7 +71,6 @@ router.post("/add", (req, res) => {
 router.post("/remove", (req, res) => {
     let { amount } = req.body
     amount = - amount
-    console.log (amount)
     User.findById(req.user_id).orFail()
         .then(user => Coin.findOneAndUpdate({ user: user._id }, { $inc: { amount: amount } }, { new: true, runValidators: true }))        
         .then(coin => {
