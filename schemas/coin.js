@@ -7,7 +7,7 @@ const coinSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
-    last_login: {
+    last_auto_add: {
         type: Date,
         default: new Date(),
         required: true
@@ -18,6 +18,5 @@ const coinSchema = new mongoose.Schema({
         required: true
     }
 })
-
 
 module.exports = mongoose.model('Coin', coinSchema);

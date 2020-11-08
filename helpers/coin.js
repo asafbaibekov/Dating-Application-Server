@@ -1,12 +1,11 @@
-var express = require("express");
-var router = express.Router();
-
 const User = require("../schemas/user");
 const Coin = require("../schemas/coin");
 
 
-router.get("/me", (req, res) => {
-    User.findById(req.user_id)
+module.exports.check_and_update = function  (req, res, next) {
+    let { user_id, email, password } = req.body
+    console.log(user_id)
+    User.findById(user_id)
     .orFail()
     .then((user) =>
       Coin.findOneAndUpdate(
@@ -49,24 +48,4 @@ router.get("/me", (req, res) => {
         res.send({ code: 5, description: error.message });
       else res.send({ code: 1, description: "unknown error" });
     });    
-});
-
-
-router.post("/add", (req, res) => {
-    let { amount } = req.body
-    User.findById(req.user_id).orFail()
-        .then(user => Coin.findOneAndUpdate({ user: user._id }, { $inc: { amount: amount } }, { new: true, runValidators: true }))        
-        .then(coin => {
-            res.send({ code: 0, description: "success", coin });
-        })
-        .catch(error => {
-            if (error.name == "DocumentNotFoundError")
-                res.send({ code: 5, description: error.message });
-            else
-                res.send({ code: 1, description: "unknown error" });
-        });
-});
-
-
-module.exports = router; 
-
+}

@@ -9,6 +9,7 @@ const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWI
 const User = require('../schemas/user')
 
 const authenticate = require('./auth')
+const coin = require('../helpers/coin')
 
 function generateAccessToken(id) {
     return jwt.sign({ user_id: id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
@@ -104,7 +105,9 @@ router.post('/login', function(req, res, next) {
                 return User.findByIdAndUpdate(user._id, { access_token, refresh_token }, { new: true })
             })
             .then(user => {
+                req.body.user_id = user._id
                 res.send({ accessToken: user.access_token, refreshToken: user.refresh_token, user_id: user._id })
+                next()
             })
             .catch(error => {
                 if (error.name == 'DocumentNotFoundError')
@@ -118,7 +121,7 @@ router.post('/login', function(req, res, next) {
             })
         
     }
-})
+}, coin.check_and_update)
 
 router.post('/token', (req, res) => {
     let refresh_token = req.body.token
