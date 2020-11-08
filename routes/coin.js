@@ -68,5 +68,23 @@ router.post("/add", (req, res) => {
 });
 
 
+router.post("/remove", (req, res) => {
+    let { amount } = req.body
+    amount = - amount
+    console.log (amount)
+    User.findById(req.user_id).orFail()
+        .then(user => Coin.findOneAndUpdate({ user: user._id }, { $inc: { amount: amount } }, { new: true, runValidators: true }))        
+        .then(coin => {
+            res.send({ code: 0, description: "success", coin });
+        })
+        .catch(error => {
+            if (error.name == "DocumentNotFoundError")
+                res.send({ code: 5, description: error.message });
+            else
+                res.send({ code: 1, description: "unknown error" });
+        });
+});
+
+
 module.exports = router; 
 
