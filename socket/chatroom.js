@@ -4,7 +4,7 @@ let Message = require("../schemas/message");
 
 module.exports = function(io) {
     io.of('/chatroom').on('connection', function(socket) {
-        socket.on('join', function(receiver_id) {
+        socket.on('join', function(receiver_id, callback) {
             if (receiver_id == null) return socket.emit('exception', { code: 2, description: 'receiver_id required' })
             if (typeof receiver_id != 'string') return socket.emit('exception', { code: 2, description: 'receiver_id must be string' })
             User.findById(receiver_id).orFail()
@@ -22,6 +22,7 @@ module.exports = function(io) {
                 )
                 .then(chat => {
                     socket.join(chat._id)
+                    if (typeof callback === 'function') callback(chat._id)
                 })
                 .catch(err => {
                     if (err.name == 'DocumentNotFoundError')
