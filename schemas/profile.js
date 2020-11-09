@@ -13,10 +13,13 @@ var profileSchema = new mongoose.Schema({
         required: true,
         unique: false,
     },
-    picture: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'File',
-        required: false
+    pictures: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'File',
+            required: false,
+        }],
+        required: true
     },
     job: {
         type: String,
