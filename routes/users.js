@@ -148,14 +148,19 @@ router.post('/token', (req, res) => {
 
 router.delete('/logout', (req, res) => {
     let refresh_token = req.body.token
-    User.findOne({ refresh_token }, (err, user) => {
-        if (err != null) return res.sendStatus(403)
-        if (user == null) return res.send({ code: 5, description: 'user not found'})
-        User.findByIdAndUpdate(user.id, { access_token: '', refresh_token: '' }, (err) => {
-            if (err != null) return res.sendStatus(500)
+    User.findOneAndUpdate({ refresh_token })
+        .then(() => {
             res.send({ code: 0, description: 'success' })
         })
-    })
+        .catch(error => {
+            switch (error.name) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: error.message })
+                    break
+                default:
+                    res.send({ code: 1, description: "unknown error" })
+            }
+        })
 })
 
 router.get('/me', authenticate.http_auth, (req, res) => {
