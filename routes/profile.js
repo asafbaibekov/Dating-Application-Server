@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
+var fs = require('fs');
+
 const User = require("../schemas/user")
 const Profile = require("../schemas/profile")
 const File = require("../schemas/file")
@@ -10,7 +12,7 @@ var formidable = require('formidable');
 var { upload_profile_picture, delete_profile_picture } = require('../helpers/google-cloud-storage')
 
 router.get('/me', (req, res) => {
-    Profile.findOne({ user: req.user_id }).populate('picture').orFail()
+    Profile.findOne({ user: req.user_id }).populate('pictures').orFail()
         .then(profile => {
             res.send({ code: 0, description: 'success', profile })
         })
@@ -55,8 +57,8 @@ router.patch('/update', (req, res) => {
     Object.keys(profile).forEach(key => (profile[key] == null) && delete profile[key]);
     User.findById(req.user_id)
         .then(user => Profile.findByIdAndUpdate(user.profile, { $set: profile }, { new: true, runValidators: true, setDefaultsOnInsert: true }).orFail())
-        .then(profile => profile.populate('picture').execPopulate())
-        .then(profile => { 
+        .then(profile => profile.populate('pictures').execPopulate())
+        .then(profile => {
             res.send({ code: 0, description: 'success', profile })
         })
         .catch(error => {
@@ -73,8 +75,8 @@ router.patch('/update', (req, res) => {
         })
 })
 
-router.patch('/picture', (req, res) => {
-    var form = new formidable.IncomingForm({ keepExtensions: true, maxFileSize: 10 * 1024 * 1024 });
+router.patch('/pictures', (req, res) => {
+    var form = new formidable.IncomingForm({ keepExtensions: true, maxFileSize: 10 * 1024 * 1024, multiples: true });
     User.findById(req.user_id).orFail()
         .then(user => Profile.findById(user.profile).orFail())
         .then(profile => {
@@ -85,27 +87,39 @@ router.patch('/picture', (req, res) => {
                 })
             })
             .then(({ files }) => {
-                if (files.picture == null || files.picture.type == null) {
+                let pictures = [files.picture1, files.picture2, files.picture3, files.picture4, files.picture5].filter(element => element !== undefined);
+                if (pictures.length === 0) {
                     let error = new Error()
-                    error.name = 'EmptyPicture'
-                    error.message = 'picture required'
+                    error.name = 'EmptyPictureList'
+                    error.message = 'one picture at least is required'
                     throw error
                 }
-                if (files.picture.type.split('/')[0] != 'image') {
+                if (profile.pictures.length + pictures.length > 5) {
+                    let error = new Error()
+                    error.name = 'OverloadedPictureList'
+                    error.message = 'five pictures at most are allowed'
+                    throw error
+                }
+                if (!pictures.every(picture => picture.type.split('/')[0] == 'image')) {
                     let error = new Error()
                     error.name = 'FileTypeError'
-                    error.message = 'picture must be image type'
+                    error.message = 'all elements of pictures array must be image type'
                     throw error
                 }
-                if (profile.picture == null)
-                    return upload_profile_picture(files.picture.path)
-                return File.findByIdAndDelete(profile.picture)
-                    .then(file => delete_profile_picture(file.name))
-                    .then(response => upload_profile_picture(files.picture.path))
+                return Promise.all(pictures.map(picture => {
+                    return upload_profile_picture(picture.path).then(object => {
+                        return new Promise(resolve => { fs.unlink(picture.path, () => { resolve(object) }) })
+                    })
+                }))
+                .then(objects => {
+                    return objects.reduce((p, object) => {
+                        return p.then(() => {
+                            return File.create(object).then(file => Profile.findByIdAndUpdate(profile._id, { $push: { pictures: file._id } }, { new: true, runValidators: true }).orFail())
+                        });
+                    }, Promise.resolve());
+                })
+                .then(() => Profile.findById(profile._id).populate('pictures'))
             })
-            .then(object => File.create(object))
-            .then(file => Profile.findByIdAndUpdate(profile._id, { picture: file._id }, { new: true, runValidators: true }).orFail())
-            .then(profile => profile.populate('picture').execPopulate())
             .then(profile => {
                 res.send({ code: 0, description: 'success', profile })
             })
@@ -115,10 +129,58 @@ router.patch('/picture', (req, res) => {
                 case 'DocumentNotFoundError':
                     res.send({ code: 5, description: 'profile not found for user, create profile before insert picture' })
                     break
-                case 'EmptyPicture':
+                case 'EmptyPictureList':
+                case 'OverloadedPictureList':
                 case 'FileTypeError':
                 case 'FormidableError':
                     res.send({ code: 2, description: error.message })
+                    break
+                default:
+                    res.send({ code: 1, description: 'unknown error' })
+            }
+        })
+})
+
+router.delete('/picture', (req, res) => {
+    let { picture_id } = req.body
+    User.findById(req.user_id).orFail()
+        .then(user => {
+            return Profile.findByIdAndUpdate(user.profile, { $pull: { pictures: picture_id } }, { new: true }).orFail()
+                            .then(profile => File.findByIdAndDelete(picture_id).then(() => profile).catch(() => profile))
+        })
+        .then(profile => profile.populate('pictures').execPopulate())
+        .then(profile => {
+            res.send({ code: 0, description: 'success', profile })
+        })
+        .catch(error => {
+            switch(error) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: 'profile not found for user, create profile before insert picture' })
+                    break
+                default:
+                    res.send({ code: 1, description: 'unknown error' })
+            }
+        })
+})
+
+
+router.delete('/pictures', (req, res) => {
+    User.findById(req.user_id).orFail()
+        .then(user => Profile.findById(user._id, '_id pictures'))
+        .then(profile => {
+            return Profile.findByIdAndUpdate(profile, { pictures: [] }, { new: true }).orFail()
+                .then(profile => {
+                    return Promise.all(profile.pictures.map(picture_id => File.findByIdAndDelete(picture_id))
+                                    .then(() => profile).catch(() => profile))
+                })
+        })
+        .then(profile => {
+            res.send({ code: 0, description: 'success', profile })
+        })
+        .catch(error => {
+            switch(error) {
+                case 'DocumentNotFoundError':
+                    res.send({ code: 5, description: 'profile not found for user, create profile before insert picture' })
                     break
                 default:
                     res.send({ code: 1, description: 'unknown error' })
