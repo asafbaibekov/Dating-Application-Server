@@ -11,6 +11,7 @@ var messagingRouter = require('./routes/messaging');
 var storyRouter = require('./routes/story');
 var friendRouter = require('./routes/friend');
 var coinsRouter = require('./routes/coin');
+var leaderRouter = require('./routes/leader');
 
 var app = express();
 
@@ -34,6 +35,7 @@ app.use('/messaging', authenticate.http_auth, coin.check_and_update, messagingRo
 app.use('/story', authenticate.http_auth, coin.check_and_update, storyRouter);
 app.use('/friend', authenticate.http_auth, coin.check_and_update, friendRouter);
 app.use('/coin', authenticate.http_auth, coin.check_and_update, coinsRouter);
+app.use('/leader', authenticate.http_auth, coin.check_and_update, leaderRouter);
 
 io.use(authenticate.socket_auth);
 io.of('/chatroom').use(authenticate.socket_auth);
