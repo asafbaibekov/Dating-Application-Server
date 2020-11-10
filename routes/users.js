@@ -105,6 +105,7 @@ router.post('/login', function(req, res, next) {
             })
             .then(user => {
                 res.send({ accessToken: user.access_token, refreshToken: user.refresh_token, user_id: user._id })
+                next()
             })
             .catch(error => {
                 if (error.name == 'DocumentNotFoundError')
