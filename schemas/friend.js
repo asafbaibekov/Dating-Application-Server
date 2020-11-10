@@ -20,6 +20,11 @@ const friendSchema = new mongoose.Schema({
         ],
         default: 'Add Friend',
         required: true
+    },
+    is_super: {
+        type: Boolean,
+        default: false,
+        required: true
     }
 }, {
     timestamps: true

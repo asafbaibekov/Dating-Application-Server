@@ -26,6 +26,7 @@ router.use((req, res, next) => {
 })
 
 router.post('/request', (req, res) => {
+    let { is_super } = req.body
     Promise.all([User.findById(req.user_id).orFail(), User.findById(req.recipient).orFail()])
         .then(([user, recipient]) => {
             return Friend.exists({
@@ -46,13 +47,13 @@ router.post('/request', (req, res) => {
             return Promise.all([
                 Friend.findOneAndUpdate(
                     { user: user._id, recipient: recipient._id },
-                    { $set: { status: 'Pending' }},
-                    { upsert: true, new: true }
+                    { is_super, $set: { status: 'Pending' } },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
                 ).then(friend => User.findByIdAndUpdate(friend.user, { $push: { friends: friend._id } })),
                 Friend.findOneAndUpdate(
                     { user: recipient._id, recipient: user._id },
-                    { $set: { status: 'Requested' }},
-                    { upsert: true, new: true }
+                    { is_super, $set: { status: 'Requested' } },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
                 ).then(friend => User.findByIdAndUpdate(friend.user, { $push: { friends: friend._id }} ))
             ])
         })
