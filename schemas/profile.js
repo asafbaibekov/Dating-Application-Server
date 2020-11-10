@@ -33,7 +33,7 @@ var profileSchema = new mongoose.Schema({
     },
     interests: {
         type: [String],
-        enum: ['football', 'basketball', 'read'],
+        enum: ["Sport", "Computers", "Walk", "Horses", "Dances", "Food", "Books", "Theater", "Army", "Racing", "Series", "Sushi", "Flowers", "Fishing", "Football", "Basketball", "Baking", "Dating", "Sauna", "Sea", "Foreign countries", "Calm", "Roleplay", "Excitements", "Friends", "Computer games", "Pizza", "Shopping", "Nature", "Sense of humor", "Kissing", "Photography", "Massage", "Green tea", "Animals", "Ice cream", "Dogs", "Cats", "Horses"],
         required: true
     },
     height: {
