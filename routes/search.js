@@ -68,7 +68,7 @@ router.get('/profiles', (req, res) => {
                     }
                 },
                 ...query
-            })
+            }).populate('pictures')
         })
         .then(profiles => {
             res.send({ code: 0, description: 'success', profiles })
