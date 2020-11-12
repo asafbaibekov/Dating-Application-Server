@@ -6,7 +6,21 @@ const Friend = require("../schemas/friend")
 
 router.get('/me', (req, res) => {
     User.findById(req.user_id).orFail()
-        .then(user => Friend.find({ user: user._id }))
+        .then(user => {
+            return Friend.find({ user: user._id })
+                .populate({ 
+                    path: 'user',
+                    select: 'profile',
+                    populate: {
+                        path: 'profile',
+                        model: 'Profile',
+                        populate: {
+                            path: 'pictures',
+                            model: 'File'
+                        }
+                    }
+                })
+        })
         .then(friends => {
             res.send({ code: 0, description: 'success', friends })
         })
