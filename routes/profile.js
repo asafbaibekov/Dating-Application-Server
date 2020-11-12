@@ -166,14 +166,9 @@ router.delete('/picture', (req, res) => {
 
 router.delete('/pictures', (req, res) => {
     User.findById(req.user_id).orFail()
-        .then(user => Profile.findById(user._id, '_id pictures'))
-        .then(profile => {
-            return Profile.findByIdAndUpdate(profile, { pictures: [] }, { new: true }).orFail()
-                .then(profile => {
-                    return Promise.all(profile.pictures.map(picture_id => File.findByIdAndDelete(picture_id))
-                                    .then(() => profile).catch(() => profile))
-                })
-        })
+        .then(user => Profile.findById(user.profile, '_id pictures').orFail())
+        .then(profile => Profile.findByIdAndUpdate(profile, { pictures: [] }, { new: true }).orFail())
+        .then(profile => Promise.all(profile.pictures.map(picture_id => File.findByIdAndDelete(picture_id))).then(() => profile).catch(() => profile))
         .then(profile => {
             res.send({ code: 0, description: 'success', profile })
         })
